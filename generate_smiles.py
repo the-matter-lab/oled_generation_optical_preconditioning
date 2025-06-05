@@ -195,9 +195,12 @@ def main(args):
         try:
             mol = Chem.MolFromSmiles(smiles)
             assert mol is not None
-            valid_smiles.append(smiles)
+            canonical = Chem.MolToSmiles(mol, canonical=True)
+            valid_smiles.append(canonical)
         except:
             continue
+
+    valid_smiles = list(set(valid_smiles)) # Deduplicate SMILES
 
     print(f"{len(valid_smiles)} valid SMILES generated.")
 
