@@ -18,6 +18,10 @@ This is supposed to be an internal repository for The Matter Lab, models develop
 
 <pre><code>bash installation.sh</code></pre>
 
+<p>Download the finetuned solvent model from Google Drive using <code>download_model.sh</code>:</p>
+
+<pre><code>bash download_model.sh</code></pre>
+
 <hr>
 
 <h2>🚀 SMILES Generation</h2>
