@@ -1,5 +1,5 @@
 <html>
-<head><title>OLED Molecular SMILES Generator</title></head>
+
 <body>
 
 <h1>OLED Molecular SMILES Generator</h1>
