@@ -1,0 +1,4 @@
+# Ignore generated outputs and models
+generated_data/
+model_checkpoints/
+
