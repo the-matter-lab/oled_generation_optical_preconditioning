@@ -1,9 +1,0 @@
-device_used: cuda
-do_sample: true
-max_new_tokens: 150
-model_path: model_checkpoints/finetuned_coldstart_v1.ckpt
-n_valid_smiles: 109
-num_beams: 1
-num_return_sequences: 180
-prompt: <bos><strength4><absorption0><splitting0><solvent0>
-temperature: 0.8
