@@ -2,8 +2,8 @@
 set -euo pipefail
 
 PY=./generate_smiles.py          # path to your Python script
-MODEL=./finetuned_coldstart_v1.ckpt  # path to your checkpoint
-OUTROOT=./runs
+MODEL=./model_checkpoints/finetuned_coldstart_v1.ckpt
+OUTROOT=./sweep_conditionings  # output root directory
 RATE=0                           # keep rate fixed (change if needed)
 SEQS=250                         # num_return_sequences
 
@@ -25,7 +25,7 @@ for S in {0..4}; do
       --num_return_sequences "$SEQS" \
       --num_beams 1 \
       --do_sample \
-      --temperature 0.8
+      --temperature 1
   done
 done
 

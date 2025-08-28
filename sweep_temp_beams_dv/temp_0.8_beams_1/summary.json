@@ -4,5 +4,8 @@
   "unique_valid": 122,
   "pct_valid_total": 50.8,
   "pct_unique_within_valid": 96.06,
-  "pct_unique_total": 48.8
+  "pct_unique_total": 48.8,
+  "mean_scaffold_tanimoto": 0.1593,
+  "scaffold_diversity": 0.8407,
+  "n_scaffold_pairs": 7381
 }

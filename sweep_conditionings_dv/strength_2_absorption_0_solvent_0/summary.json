@@ -1,0 +1,11 @@
+{
+  "total_rows": 250,
+  "valid": 91,
+  "unique_valid": 82,
+  "pct_valid_total": 36.4,
+  "pct_unique_within_valid": 90.11,
+  "pct_unique_total": 32.8,
+  "mean_scaffold_tanimoto": 0.1381,
+  "scaffold_diversity": 0.8619,
+  "n_scaffold_pairs": 2926
+}
