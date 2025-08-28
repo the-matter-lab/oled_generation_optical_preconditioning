@@ -1,0 +1,21 @@
+{
+  "model_path": "./model_checkpoints/finetuned_coldstart_v1.ckpt",
+  "prompt": "<bos><strength4><absorption0><splitting0><rate0><solvent0>",
+  "controls": {
+    "strength": 4,
+    "absorption": 0,
+    "splitting": 0,
+    "rate": 0,
+    "solvent_index": 0,
+    "solvent_name": "dichloromethane",
+    "solvent_smiles": "ClCCl"
+  },
+  "max_new_tokens": 150,
+  "num_return_sequences": 250,
+  "num_beams": 250,
+  "temperature": 1.9,
+  "do_sample": true,
+  "n_smiles_written": 250,
+  "device_used": "cpu",
+  "run_timestamp": "2025-08-28T01:10:52"
+}

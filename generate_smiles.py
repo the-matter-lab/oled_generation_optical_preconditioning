@@ -1,132 +1,70 @@
 import os
+import json
+import csv
 import torch
 import argparse
-import yaml
-from rdkit import Chem
-from rdkit import RDLogger
 from datetime import datetime
+from rdkit import RDLogger
 from transformers import AutoTokenizer, GenerationConfig
 from model import OledModel
 from mixed_config import get_config
 
-"""
-SMILES Generator Pipeline
-=========================
-
-This script uses a fine-tuned transformer model to generate molecular SMILES strings
-conditioned on property control tokens such as strength, absorption, splitting, and solvent.
-
-Usage:
-------
-Run from the command line:
-
-    python generate_smiles.py --model_path finetuned_coldstart_v1.ckpt
-
-Optional flags:
----------------
-    --max_new_tokens        (default: 150)
-    --num_return_sequences  (default: 180)
-    --num_beams             (default: 200)
-    --temperature           (default: 0.8)
-    --do_sample             (default: True)
-    --prompt                (default: "<bos><strength4><absorption0><splitting0><solvent0>")
-    --generated_data        (default: "generated_data")
-
-Prompt control tokens (examples):
----------------------------------
-    - <strengthX>    where X ∈ [0–6]
-    - <absorptionX>  where X ∈ [0–6]
-    - <splittingX>   where X ∈ [0–6]
-    - <solventX>     where X ∈ [0–9]
-
-Solvent mapping:
-----------------
-    'ClCCl'         -> <solvent0>  # Dichloromethane  
-    'CC#N'          -> <solvent1>  # Acetonitrile  
-    'Cc1ccccc1'     -> <solvent2>  # Toluene  
-    'ClC(Cl)Cl'     -> <solvent3>  # Chloroform  
-    'C1COC1'        -> <solvent4>  # Oxetane  
-    'CO'            -> <solvent5>  # Methanol  
-    'CCO'           -> <solvent6>  # Ethanol  
-    'CS(C)=O'       -> <solvent7>  # DMSO  
-    'C1CCCCC1'      -> <solvent8>  # Cyclohexane  
-    'CN(C)C=O'      -> <solvent9>  # DMF  
-
-Output folder structure:
-------------------------
-A folder named by timestamp (e.g. `generated_data/20250605-103015/`) will be created.
-Inside you will find:
-
-    - smiles.txt               : all valid generated SMILES
-    - generation_config.yaml   : parameters used in this run (model path, prompt, generation settings)
-
-
-"""
-
-
-# Suppress RDKit warnings
 RDLogger.DisableLog('rdApp.*')
 
+SOLVENTS = [
+    ("ClCCl",        "dichloromethane"),
+    ("CC#N",         "acetonitrile"),
+    ("Cc1ccccc1",    "toluene"),
+    ("ClC(Cl)Cl",    "chloroform"),
+    ("C1COC1",       "oxetane"),
+    ("CO",           "methanol"),
+    ("CCO",          "ethanol"),
+    ("CS(C)=O",      "dmso"),
+    ("C1CCCCC1",     "cyclohexane"),
+    ("CN(C)C=O",     "dmf"),
+]
+SOLVENT_SMILES_TO_IDX = {smiles: i for i, (smiles, _) in enumerate(SOLVENTS)}
+SOLVENT_NAME_TO_IDX   = {name: i for i, (_, name) in enumerate(SOLVENTS)}
+
+CHEM_TOKEN_MAX_ID = 583
+
+def int_in_range(lo, hi):
+    def _check(v):
+        try:
+            iv = int(v)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"must be an integer in [{lo},{hi}]")
+        if not (lo <= iv <= hi):
+            raise argparse.ArgumentTypeError(f"must be in [{lo},{hi}]")
+        return iv
+    return _check
+
+def parse_solvent(v: str) -> int:
+    v = v.strip()
+    if v.isdigit():
+        idx = int(v)
+        if 0 <= idx < len(SOLVENTS):
+            return idx
+        raise argparse.ArgumentTypeError("solvent index must be in [0,9]")
+    if v in SOLVENT_SMILES_TO_IDX:
+        return SOLVENT_SMILES_TO_IDX[v]
+    key = v.lower()
+    if key in SOLVENT_NAME_TO_IDX:
+        return SOLVENT_NAME_TO_IDX[key]
+    raise argparse.ArgumentTypeError(
+        "unrecognized solvent. pass index [0–9], one of SMILES "
+        f"{list(SOLVENT_SMILES_TO_IDX.keys())}, or a name "
+        f"{list(SOLVENT_NAME_TO_IDX.keys())}"
+    )
+
 def generate_text(tokenizer, model, start_str, max_new_tokens, num_return_sequences, num_beams, temperature, do_sample):
-    """
-    Generate molecular SMILES strings from a pretrained or fine-tuned language model.
-
-    Parameters
-    ----------
-    tokenizer : transformers.PreTrainedTokenizer
-        Tokenizer used for encoding the prompt and decoding the output tokens.
-    model : torch.nn.Module
-        Language model used to generate the output sequences.
-    start_str : str
-        Prompt string to condition the generation. Must include property control tokens such as:
-        - <strengthX>
-        - <absorptionX>
-        - <splittingX>
-        - <solventX>
-        Example: '<bos><strength4><absorption0><splitting0><solvent0>'
-    max_new_tokens : int
-        Maximum number of new tokens to generate per sequence.
-    num_return_sequences : int
-        Total number of sequences to generate per input.
-    num_beams : int
-        Beam width for beam search. Higher values explore more candidate sequences.
-    temperature : float
-        Sampling temperature. Lower values yield more deterministic outputs; higher values increase randomness.
-    do_sample : bool
-        If True, use sampling instead of greedy decoding. Must be True if using temperature.
-
-    Returns
-    -------
-    torch.Tensor
-        A tensor of shape (num_return_sequences, sequence_length) containing generated token IDs.
-
-    Token Dictionary for Property Control
-    -------------------------------------
-    Property tokens used in `start_str`:
-
-    - Absorption:       <absorption0> (ID: 583) to <absorption6> (ID: 589)
-    - Rate:             <rate0> (590) to <rate3> (593)
-    - Splitting:        <splitting0> (594) to <splitting6> (600)
-    - Strength:         <strength0> (601) to <strength6> (607)
-    - Solvent:          <solvent0> (608) to <solvent9> (617)
-
-    Solvent Label Map (for reference)
-    ---------------------------------
-    {
-        'ClCCl':         '<solvent0>',  # Dichloromethane  
-        'CC#N':          '<solvent1>',  # Acetonitrile  
-        'Cc1ccccc1':     '<solvent2>',  # Toluene  
-        'ClC(Cl)Cl':     '<solvent3>',  # Chloroform  
-        'C1COC1':        '<solvent4>',  # Oxetane  
-        'CO':            '<solvent5>',  # Methanol  
-        'CCO':           '<solvent6>',  # Ethanol  
-        'CS(C)=O':       '<solvent7>',  # DMSO  
-        'C1CCCCC1':      '<solvent8>',  # Cyclohexane  
-        'CN(C)C=O':      '<solvent9>',  # DMF  
-    }
-    """
     input_tokens = tokenizer.encode(start_str, return_tensors="pt", add_special_tokens=False).to(model.device)
-    generation_config = GenerationConfig(
+    if tokenizer.pad_token_id is None:
+        if tokenizer.eos_token is not None:
+            tokenizer.pad_token = tokenizer.eos_token
+        else:
+            raise ValueError("Tokenizer has no pad_token_id and no eos_token to fall back on.")
+    gen_cfg = GenerationConfig(
         pad_token_id=tokenizer.pad_token_id,
         max_new_tokens=max_new_tokens,
         num_return_sequences=num_return_sequences,
@@ -134,113 +72,132 @@ def generate_text(tokenizer, model, start_str, max_new_tokens, num_return_sequen
         temperature=temperature,
         do_sample=do_sample,
     )
-    return model.generate(input_tokens, generation_config=generation_config)
-
+    return model.generate(input_tokens, generation_config=gen_cfg)
 
 def main(args):
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.makedirs(args.datapath, exist_ok=True)
+
     tokenizer = AutoTokenizer.from_pretrained('./smiles_tokenizer')
 
     cfg = get_config()
-    cfg.gpt2_config['vocab_size'] = tokenizer.vocab_size
+    cfg.gpt2_config['vocab_size']   = tokenizer.vocab_size
     cfg.gpt2_config['bos_token_id'] = tokenizer.bos_token_id
     cfg.gpt2_config['eos_token_id'] = tokenizer.eos_token_id
     cfg.gpt2_config['pad_token_id'] = tokenizer.pad_token_id
 
     model_wrapper = OledModel(cfg, tokenizer)
     model_wrapper.to_lora()
+    try:
+        state = torch.load(args.model_path, weights_only=True, map_location=torch.device('cpu'))
+    except TypeError:
+        state = torch.load(args.model_path, map_location=torch.device('cpu'))
+    model_wrapper.load_state_dict(state)
 
-    # Load checkpoint to CPU initially
-    model_wrapper.load_state_dict(
-        torch.load(args.model_path, weights_only=True, map_location=torch.device('cpu'))
-    )
-
-    # Attempt to move model to GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
         model_wrapper.model = model_wrapper.model.to(device)
         model_wrapper.model.eval()
-        print(f"Using device: {device}")
-    except Exception as e:
-        print(f"⚠️  Failed to use GPU due to: {e}\nSwitching to CPU.")
+    except Exception:
         device = torch.device("cpu")
         model_wrapper.model = model_wrapper.model.to(device)
         model_wrapper.model.eval()
 
-    model = model_wrapper.model
+    prompt = (
+        f"<bos>"
+        f"<strength{args.strength}>"
+        f"<absorption{args.absorption}>"
+        f"<splitting{args.splitting}>"
+        f"<rate{args.rate}>"
+        f"<solvent{args.solvent}>"
+    )
 
+    model = model_wrapper.model
     try:
         output_tokens = generate_text(
-            tokenizer, model, args.prompt,
+            tokenizer, model, prompt,
             args.max_new_tokens, args.num_return_sequences,
             args.num_beams, args.temperature, args.do_sample
         )
-    except torch.cuda.OutOfMemoryError as e:
-        print("⚠️  CUDA out of memory during generation. Switching to CPU and retrying...")
+    except torch.cuda.OutOfMemoryError:
         torch.cuda.empty_cache()
         device = torch.device("cpu")
         model = model.to(device)
         model.eval()
         output_tokens = generate_text(
-            tokenizer, model, args.prompt,
+            tokenizer, model, prompt,
             args.max_new_tokens, args.num_return_sequences,
             args.num_beams, args.temperature, args.do_sample
         )
 
-    valid_smiles = []
-    for e in output_tokens:
-        output_token = [t for t in e.cpu().tolist() if t < 583]
-        smiles = tokenizer.decode(output_token, skip_special_tokens=True)
-        smiles = ''.join(smiles.split())
-        try:
-            mol = Chem.MolFromSmiles(smiles)
-            assert mol is not None
-            canonical = Chem.MolToSmiles(mol, canonical=True)
-            valid_smiles.append(canonical)
-        except:
-            continue
+    smiles_csv = os.path.join(args.datapath, "smiles.csv")
+    n_written = 0
+    with open(smiles_csv, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["smiles"])
+        for e in output_tokens:
+            toks_list = e.cpu().tolist()
+            if CHEM_TOKEN_MAX_ID is not None:
+                toks_list = [t for t in toks_list if t < CHEM_TOKEN_MAX_ID]
+            s = tokenizer.decode(toks_list, skip_special_tokens=True)
+            s = ''.join(s.split())
+            writer.writerow([s])
+            n_written += 1
+            f.flush()
 
-    valid_smiles = list(set(valid_smiles)) # Deduplicate SMILES
+    solvent_smiles, solvent_name = SOLVENTS[args.solvent]
 
-    print(f"{len(valid_smiles)} valid SMILES generated.")
-
-    # Output directory setup
-    os.makedirs(args.generated_data, exist_ok=True)
-    run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    run_dir = os.path.join(args.generated_data, run_id)
-    os.makedirs(run_dir)
-
-    # Save SMILES
-    smiles_path = os.path.join(run_dir, "smiles.txt")
-    with open(smiles_path, "w") as f:
-        for s in valid_smiles:
-            f.write(s + "\n")
-
-    # Save config
-    config = {
-        'model_path': args.model_path,
-        'prompt': args.prompt,
-        'max_new_tokens': args.max_new_tokens,
-        'num_return_sequences': args.num_return_sequences,
-        'num_beams': args.num_beams,
-        'temperature': args.temperature,
-        'do_sample': args.do_sample,
-        'n_valid_smiles': len(valid_smiles),
-        'device_used': str(device),
+    metadata = {
+        "model_path": args.model_path,
+        "prompt": prompt,
+        "controls": {
+            "strength": args.strength,
+            "absorption": args.absorption,
+            "splitting": args.splitting,
+            "rate": args.rate,
+            "solvent_index": args.solvent,
+            "solvent_name": solvent_name,
+            "solvent_smiles": solvent_smiles,
+        },
+        "max_new_tokens": args.max_new_tokens,
+        "num_return_sequences": args.num_return_sequences,
+        "num_beams": args.num_beams,
+        "temperature": args.temperature,
+        "do_sample": args.do_sample,
+        "n_smiles_written": n_written,
+        "device_used": str(device),
+        "run_timestamp": datetime.now().isoformat(timespec="seconds"),
     }
-    with open(os.path.join(run_dir, "generation_config.yaml"), "w") as f:
-        yaml.dump(config, f)
 
+    meta_json = os.path.join(args.datapath, "metadata.json")
+    with open(meta_json, "w") as f:
+        json.dump(metadata, f, indent=2)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate molecules using fine-tuned model")
-    parser.add_argument("--model_path", type=str, required=True, help="Path to model checkpoint")
-    parser.add_argument("--prompt", type=str, default="<bos><strength4><absorption0><splitting0><solvent0>", help="Prompt for generation")
+    parser = argparse.ArgumentParser(description="generate molecules using fine-tuned model")
+    parser.add_argument("--model_path", type=str, required=True)
+    parser.add_argument("--datapath", type=str, required=True)
+
+    parser.add_argument("--strength",   type=int_in_range(0, 4), default=4)
+    parser.add_argument("--absorption", type=int_in_range(0, 4), default=0)
+    parser.add_argument("--splitting",  type=int_in_range(0, 4), default=0)
+    parser.add_argument("--rate",       type=int_in_range(0, 3), default=0)
+
+    parser.add_argument("--solvent", dest="solvent_input_raw", type=str, default="0",
+                        help="solvent as index [0–9], SMILES (from map), or name (e.g., toluene)")
+
     parser.add_argument("--max_new_tokens", type=int, default=150)
     parser.add_argument("--num_return_sequences", type=int, default=180)
-    parser.add_argument("--num_beams", type=int, default=200)
+    parser.add_argument("--num_beams", type=int, default=1)
     parser.add_argument("--temperature", type=float, default=0.8)
-    parser.add_argument("--do_sample", type=bool, default=True)
-    parser.add_argument("--generated_data", type=str, default="generated_data", help="Directory to store generated results")
+    try:
+        from argparse import BooleanOptionalAction
+        parser.add_argument("--do_sample", action=BooleanOptionalAction, default=True)
+    except Exception:
+        parser.add_argument("--do_sample", dest="do_sample", action="store_true")
+        parser.add_argument("--no-do_sample", dest="do_sample", action="store_false")
+        parser.set_defaults(do_sample=True)
+
     args = parser.parse_args()
+    args.solvent = parse_solvent(args.solvent_input_raw)
     main(args)
