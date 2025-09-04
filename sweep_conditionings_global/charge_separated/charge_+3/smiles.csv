@@ -1,0 +1,4 @@
+smiles
+CN(C)c1ccc(/C=C/c2cc[n+](C)c[n+]2CCSSCC[n+]2ccc(/C=C/c3ccc(N(CCO)CCO)cc3)cc2)cc1
+CN(C)c1ccc(/C=C/c2cc[n+](CCCCSc3nccn3C)cc2)c[n+]1CCCSc1[nH+]ccn1C
+CCN(C)c1ccc(/C=C/c2cccc[n+]2CCSSCC[n+]2ccccc2/C=C/c2ccc(N(C)CCC[N+](C)(C)C)cc2)cc1

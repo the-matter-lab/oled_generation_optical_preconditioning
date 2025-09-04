@@ -1,0 +1,14 @@
+smiles
+CN(C)c1ccc(/C=C/c2cc[n+](CCCSc3n(C)cc[n+]3C)cc2)cc1
+[C+]CCCCCCCCCCCCCCC[n+]1ccc(/C=C/c2ccc(C(=O)C(F)(F)F)cc2)cc1
+CCCCCC[n+]1ccc(C(=O)NCCSSCCNC(=O)C[n+]2ccc(C)cc2)cc1
+[Li+][C+]1C=c2cc3ccccc3cc2=C1
+c1ccc(N(c2ccccc2)c2ccc(C3=N[N]=[Fe+2][C]34OCCO4)cc2)cc1
+CCCCCCCCCCC[n+]1cc2ccc3cc[n+](CCCCCCCCCCC)c4ccc(c1)c2c34
+CN(C)c1ccc(/C=C/c2cc[n+](CCCCSc3cccc[n+]3C)cc2)cc1
+CN(C)c1ccc(/C=C/c2cc[n+](CCC[N+](C)(C)C)cc2)c2nonc12
+CN(C)c1ccc(/C=C/c2cc[n+](CCCCCCCCCCC[n+]3ccc(/C=C/c4cccc(N(C)C)c4)cc3)cc2)cc1
+CN(CCO)c1ccc(/C=C/c2cccc[n+]2CCSSCC[n+]2ccccc2/C=C/c2ccc(N(CCO)CCO)cc2)cc1
+CN(C)c1ccc(/C=C/c2cccc[n+]2CCSSCC[n+]2ccccc2/C=C/c2ccc(N(CCO)CCO)cc2)cc1
+CCCCCCCCCN(C)c1ccc(/C=C/c2cc[n+](CCCSSCC[n+]3ccc(/C=C/c4ccc(N(C)CCCCCCC)cc4)cc3)cc2)cc1
+CCCCCCCCCCC[n+]1ccc(/C=C(\C)c2cc[n+](C)cc2)cc1
