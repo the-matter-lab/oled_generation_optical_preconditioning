@@ -1,0 +1,13 @@
+smiles
+CC(=O)CC(CCC(=O)O)C(=O)NCCOP(=O)([O-])OP(=O)([O-])OC[C@@H]1O[CH]C[C@@H]1O
+BC1CC(O)C(COP(=O)([O-])OP(=O)([O-])OC)O1
+BC1CC(O)C(COP(=O)([O-])OP(=O)([O-])O)O1
+O=[N+]([O-])c1ccc(OP(=O)([O-])[O-])cc1
+CC1=CC(=C(c2ccc(O)c(C(=O)[O-])c2)c2ccccc2S(=O)(=O)[O-])C=C(C)C1=O
+COc1cc(OCCOc2ccc(-n3c(-c4ccccc4)nnc3-[c-]3cccc3)cc2)cc(-c2cccc(C(=O)[O-])c2)c1
+O=C(O)CCCCCn1c2ccc(S(=O)(=O)[O-])cc2c2cc(S(=O)(=O)[O-])ccc21
+O=S(=O)([O-])c1ccc(S(=O)(=O)[O-])cc1
+CN(C)c1ccc2cc3c(C(=O)[O-])cc(C(=O)[O-])cc3cc2c1
+C=Cc1c(C)c2cc3nc(cc4nc(cc5c(C)c(c(C)cc1[n-]2)[N-]5)C(CC)=C4CC)C(CC)=C3CC
+CCCCCCCCCN(c1ccc(S(=O)(=O)[O-])cc1)c1ccc(S(=O)(=O)[O-])cc1
+CN(CC(=O)[O-])c1ccc(/C=C/C(=O)[O-])cc1

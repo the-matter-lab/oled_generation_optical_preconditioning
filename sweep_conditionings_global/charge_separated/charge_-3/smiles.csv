@@ -1,0 +1,6 @@
+smiles
+BC1OC(COP(=O)([O-])OP(=O)([O-])[O-])C(O)C1O
+BC1CC(O)C(COP(=O)([O-])OP(=O)([O-])[O-])O1
+CC1=N/C(=C(/c2cc(S(=O)(=O)[O-])c(O)cc2C)c2ccc3c(S(=O)(=O)[O-])cc(S(=O)(=O)[O-])c(N)c3c2Br)C=C1Br
+CCCCCCCCCCOc1cc(S(=O)(=O)[O-])c2ccc3c(S(=O)(=O)[O-])cc(S(=O)(=O)[O-])c4ccc1c2c43
+O=S(=O)([O-])c1cc(O)c2ccc3c(S(=O)(=O)[O-])cc(S(=O)(=O)[O-])c4ccc1c2c34
