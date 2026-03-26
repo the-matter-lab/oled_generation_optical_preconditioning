@@ -123,16 +123,7 @@ This is a working project.
 
 <hr>
 
-<h2>Contributors</h2>
-<ul>
-  <li>Hazohe Huang</li>
-  <li>Kevin Liu</li>
-  <li>Hyun Suk Park</li>
-  <li>Manuel Gonzalez-Lastre</li>
-  <li>Jorge A. Campos-Gonzalez-Angulo</li>
-  <li>Xinjian Liu</li>
-  <li>Alán Aspuru-Guzik</li>
-</ul>
+
 
 </body>
 </html>
