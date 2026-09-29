@@ -201,9 +201,9 @@ def main():
     ap = argparse.ArgumentParser(
         description="Analyze conditioning sweep: canonicalize/dedup SMILES, per-folder summary.json, global summary.csv, and (optionally) publication-ready matrices."
     )
-    ap.add_argument("--input_root", default="sweep_conditionings",
+    ap.add_argument("--input_root", default="generated_data/sweep_conditionings",
                     help="source root with strength_*_absorption_*_solvent_* folders")
-    ap.add_argument("--output_root", default="sweep_conditionings_dv",
+    ap.add_argument("--output_root", default="generated_data/sweep_conditionings_dv",
                     help="destination root (mirrors structure)")
     ap.add_argument("--compute_tanimoto", action="store_true",
                     help="Compute Murcko-scaffold mean Tanimoto and diversity (on deduplicated set).")
@@ -341,8 +341,8 @@ def main():
 if __name__ == "__main__":
     """Example usage:
         python analyze_sweep_conditionings.py \
-            --input_root sweep_conditionings \
-            --output_root sweep_conditionings_dv \
+            --input_root generated_data/sweep_conditionings \
+            --output_root generated_data/sweep_conditionings_dv \
             --compute_tanimoto \
             --make_matrices
     """

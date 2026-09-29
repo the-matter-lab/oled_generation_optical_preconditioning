@@ -129,9 +129,8 @@ def main():
 
 if __name__ == "__main__":
     """Example usage:
-        python split_by_charge.py\
-        --input_csv sweep_conditionings_global/smiles.csv\
-        --output_root sweep_conditionings_global/charge_separated
+        python split_by_charge.py \
+        --input_csv generated_data/sweep_conditionings_global/smiles.csv \
+        --output_root generated_data/sweep_conditionings_global/charge_separated
     """
     main()
-

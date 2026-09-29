@@ -98,9 +98,9 @@ def main():
     ap = argparse.ArgumentParser(
         description="Aggregate per-condition SMILES globally and compute pairwise overlap (Jaccard %), plotting the upper triangle."
     )
-    ap.add_argument("--input_root", default="sweep_conditionings_dv",
+    ap.add_argument("--input_root", default="generated_data/sweep_conditionings_dv",
                     help="Root with strength_*_absorption_*_solvent_* folders")
-    ap.add_argument("--output_root", default="sweep_conditionings_global",
+    ap.add_argument("--output_root", default="generated_data/sweep_conditionings_global",
                     help="Output folder for aggregated smiles.csv and overlap figure")
     args = ap.parse_args()
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     """
     Usage example:
         python aggregate_sweep_conditionings_dv.py \
-            --input_root sweep_conditionings_dv \
-            --output_root sweep_conditionings_global
+            --input_root generated_data/sweep_conditionings_dv \
+            --output_root generated_data/sweep_conditionings_global
     """
     main()
