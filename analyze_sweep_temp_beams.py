@@ -171,8 +171,8 @@ def main():
     ap = argparse.ArgumentParser(
         description="Deduplicate canonical SMILES per sweep folder, copy metadata, write summaries, and generate panel PDFs."
     )
-    ap.add_argument("--input_root", default="sweep_temp_beams", help="source root with temp_*_beams_* folders")
-    ap.add_argument("--output_root", default="sweep_temp_beams_dv", help="destination root")
+    ap.add_argument("--input_root", default="generated_data/sweep_temp_beams", help="source root with temp_*_beams_* folders")
+    ap.add_argument("--output_root", default="generated_data/sweep_temp_beams_dv", help="destination root")
     ap.add_argument("--metrics_pdf_name", default="metrics_panels.pdf",
                     help="3x1 PDF for validity/uniqueness panels (saved under output_root)")
     ap.add_argument("--diversity_pdf_name", default="diversity_panels.pdf",
@@ -296,8 +296,8 @@ if __name__ == "__main__":
 
     """Example usage:
         python analyze_sweep_temp_beams.py \
-        --input_root sweep_temp_beams \
-        --output_root sweep_temp_beams_dv \
+        --input_root generated_data/sweep_temp_beams \
+        --output_root generated_data/sweep_temp_beams_dv \
         --compute_tanimoto
     """
     main()

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 MODEL=./model_checkpoints/finetuned_coldstart_v1.ckpt
-OUTROOT=./sweep_params
+OUTROOT=./generated_data/sweep_temp_beams
 
 STRENGTH=4
 ABSORPTION=0

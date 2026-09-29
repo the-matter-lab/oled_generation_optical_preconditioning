@@ -3,7 +3,7 @@ set -euo pipefail
 
 PY=./generate_smiles.py          # path to your Python script
 MODEL=./model_checkpoints/finetuned_coldstart_v1.ckpt
-OUTROOT=./sweep_conditionings  # output root directory
+OUTROOT=./generated_data/sweep_conditionings  # output root directory
 RATE=0                           # keep rate fixed (change if needed)
 SEQS=250                         # num_return_sequences
 
@@ -30,4 +30,3 @@ for S in {0..4}; do
 done
 
 echo "done."
-
