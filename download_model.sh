@@ -30,7 +30,7 @@ fi
 
 mkdir -p "$model_dir"
 printf 'Downloading model from Zenodo...\n'
-curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+curl --fail --location --progress-bar --show-error --retry 3 --retry-delay 2 \
     --connect-timeout 20 --continue-at - --output "$partial_path" "$url"
 
 if ! check_model "$partial_path"; then
